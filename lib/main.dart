@@ -3,11 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/profile_screen.dart';
 import 'providers/auth_provider.dart';
 import 'services/remote_config_service.dart';
 import 'utils/theme.dart';
-import 'utils/routes.dart';
 import 'models/public_mix.dart';
 
 void main() async {
@@ -411,8 +409,6 @@ class FavoritesScreen extends StatelessWidget {
       ),
     );
   }
-}
-
 }
 
 class ProfileScreen extends StatelessWidget {

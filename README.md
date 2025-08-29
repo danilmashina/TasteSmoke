@@ -1,6 +1,11 @@
 <<<<<<< HEAD
 # 🚀 TasteSmoke Flutter - Полная iOS/Android версия
 
+[![Android Build](https://github.com/your-username/your-repo/actions/workflows/android_build.yml/badge.svg)](https://github.com/your-username/your-repo/actions/workflows/android_build.yml)
+[![iOS Build](https://github.com/your-username/your-repo/actions/workflows/ios_build.yml/badge.svg)](https://github.com/your-username/your-repo/actions/workflows/ios_build.yml)
+[![Web Build](https://github.com/your-username/your-repo/actions/workflows/web_build.yml/badge.svg)](https://github.com/your-username/your-repo/actions/workflows/web_build.yml)
+[![Code Quality](https://github.com/your-username/your-repo/actions/workflows/quality_check.yml/badge.svg)](https://github.com/your-username/your-repo/actions/workflows/quality_check.yml)
+
 Это полная портированная версия Android приложения TasteSmoke на Flutter, которая включает в себя все функции оригинального приложения.
 
 ## 📱 Функциональность
@@ -193,6 +198,55 @@ flutter build ios --release
 # Сборка для веб
 flutter build web --release
 ```
+
+## 🚀 CI/CD - Автоматическая сборка
+
+### GitHub Actions Workflows:
+
+#### 📋 Code Quality Check
+- **Триггер:** Push/PR в main, develop
+- **Функции:** Проверка кода, тесты, покрытие
+- **Время:** ~3-5 минут
+
+#### 🤖 Android Build
+- **Триггер:** Push в main, develop
+- **Результат:** APK + App Bundle
+- **Время:** ~8-12 минут
+
+#### 🍎 iOS Build 
+- **Триггер:** Push в main, develop
+- **Результат:** IPA файл (unsigned)
+- **Время:** ~15-20 минут
+- **Требует:** macOS-14
+
+#### 🌐 Web Build
+- **Триггер:** Push в main, develop
+- **Результат:** Web архив + GitHub Pages
+- **Время:** ~5-8 минут
+
+#### 📦 Release Build
+- **Триггер:** Git tag `v*` (например `v1.0.0`)
+- **Результат:** Мульти-платформенная сборка + GitHub Release
+- **Время:** ~25-35 минут
+
+### Использование:
+
+```bash
+# Создание релиза
+git tag v1.0.0
+git push origin v1.0.0
+
+# Ручная сборка через GitHub Actions UI
+# Actions → выбрать workflow → "Run workflow"
+```
+
+### Артефакты:
+- **Android:** APK + AAB файлы
+- **iOS:** IPA файл (требует доп. подпись для App Store)
+- **Web:** Готовый для деплоя архив
+- **Хранение:** 30 дней (90 для релизов)
+
+📖 **Подробная документация:** [CI_CD_DOCUMENTATION.md](CI_CD_DOCUMENTATION.md)
 
 ## 🔄 Система обновлений
 
