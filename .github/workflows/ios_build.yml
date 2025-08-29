@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-latest
+    runs-on: macos-14
     
     steps:
     - name: Checkout repository
@@ -28,7 +28,7 @@ jobs:
       run: flutter packages pub run build_runner build --delete-conflicting-outputs
       
     - name: Build iOS (unsigned)
-      run: flutter build ios --no-codesign --release
+      run: flutter build ios --no-codesign --release --no-tree-shake-icons
       
     - name: Create IPA
       run: |
