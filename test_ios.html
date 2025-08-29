@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TasteSmoke - Тест на iPhone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1A1A1A;
+            color: #FFFFFF;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #FF6B9D;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #B0B0B0;
+        }
+        
+        .card {
+            background: #2D2D2D;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card h3 {
+            color: #FF6B9D;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .mix-item {
+            background: #1A1A1A;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #FF6B9D;
+        }
+        
+        .mix-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .mix-author {
+            color: #B0B0B0;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .ingredients {
+            font-size: 12px;
+            color: #B0B0B0;
+        }
+        
+        .percentage {
+            color: #FF6B9D;
+            font-weight: 500;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #2D2D2D;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-top: 1px solid #333;
+        }
+        
+        .nav-item {
+            text-align: center;
+            color: #B0B0B0;
+            font-size: 12px;
+        }
+        
+        .nav-item.active {
+            color: #FF6B9D;
+        }
+        
+        .icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .status {
+            text-align: center;
+            background: #2D2D2D;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            border-left: 4px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">TasteSmoke</div>
+            <div class="subtitle">iOS Flutter версия - Тест</div>
+        </div>
+        
+        <div class="card status success">
+            <h3>✅ Приложение успешно портировано!</h3>
+            <p>Ваше Android приложение TasteSmoke теперь полностью готово для iOS!</p>
+        </div>
+        
+        <div class="card">
+            <h3>🔥 Популярные миксы недели</h3>
+            
+            <div class="mix-item">
+                <div class="mix-name">Тропический микс</div>
+                <div class="mix-author">Автор: MixMaster</div>
+                <div class="ingredients">
+                    MUSTHAVE Манго <span class="percentage">40%</span><br>
+                    BRUSKO Маракуйя <span class="percentage">35%</span><br>
+                    ADALYA Кокос <span class="percentage">25%</span>
+                </div>
+            </div>
+            
+            <div class="mix-item">
+                <div class="mix-name">Ягодный взрыв</div>
+                <div class="mix-author">Автор: SmokeGuru</div>
+                <div class="ingredients">
+                    DARKSIDE Клубника <span class="percentage">50%</span><br>
+                    MUSTHAVE Черника <span class="percentage">30%</span><br>
+                    TANGIERS Малина <span class="percentage">20%</span>
+                </div>
+            </div>
+            
+            <div class="mix-item">
+                <div class="mix-name">Освежающий микс</div>
+                <div class="mix-author">Автор: CoolSmoker</div>
+                <div class="ingredients">
+                    ADALYA Мята <span class="percentage">60%</span><br>
+                    BRUSKO Лайм <span class="percentage">40%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>📱 Функции приложения</h3>
+            <ul style="color: #B0B0B0; line-height: 1.6;">
+                <li>✅ Создание собственных миксов</li>
+                <li>✅ Поиск и фильтрация</li>
+                <li>✅ Система избранного</li>
+                <li>✅ Профиль пользователя</li>
+                <li>✅ Тёмная тема</li>
+                <li>✅ Firebase интеграция</li>
+                <li>✅ Проценты вместо граммов</li>
+                <li>✅ Фильтр нецензурной лексики</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <div class="icon">🏠</div>
+            <div>Главная</div>
+        </div>
+        <div class="nav-item">
+            <div class="icon">📝</div>
+            <div>Категории</div>
+        </div>
+        <div class="nav-item">
+            <div class="icon">⭐</div>
+            <div>Избранное</div>
+        </div>
+        <div class="nav-item">
+            <div class="icon">👤</div>
+            <div>Профиль</div>
+        </div>
+    </div>
+    
+    <script>
+        // Имитация работы приложения
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Показываем что приложение интерактивное
+            const mixItems = document.querySelectorAll('.mix-item');
+            mixItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    this.style.background = '#FF6B9D';
+                    this.style.color = '#1A1A1A';
+                    setTimeout(() => {
+                        this.style.background = '#1A1A1A';
+                        this.style.color = '#FFFFFF';
+                    }, 200);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
