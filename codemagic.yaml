@@ -1,0 +1,30 @@
+workflows:
+  ios-workflow:
+    name: iOS Workflow
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up key properties
+        script: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > "$FCI_BUILD_DIR/android/key.properties"
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Generate code
+        script: |
+          flutter packages pub run build_runner build --delete-conflicting-outputs
+      - name: Flutter build iOS
+        script: |
+          flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/iphoneos/*.app
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: false

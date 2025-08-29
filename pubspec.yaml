@@ -1,0 +1,43 @@
+name: tastesmoke_flutter
+description: TasteSmoke - приложение для кальянных миксов (Flutter версия)
+version: 1.1.0+3
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  firebase_remote_config: ^4.3.8
+  firebase_storage: ^11.6.0
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  
+  # UI & Navigation
+  cupertino_icons: ^1.0.6
+  cached_network_image: ^3.3.1
+  
+  # Utils
+  package_info_plus: ^5.0.1
+  url_launcher: ^6.2.2
+  intl: ^0.19.0
+  
+  # JSON
+  json_annotation: ^4.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  json_serializable: ^6.7.1
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
