@@ -71,20 +71,6 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
             }
           });
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'TasteSmoke',
-      theme: AppTheme.darkTheme,
-      home: Builder(
-        builder: (context) {
-          // Показываем диалог обновления при необходимости
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_showUpdateDialog) {
-              _showUpdateDialogWidget(context);
-            }
-          });
-
           // Проверяем инициализацию Firebase
           try {
             if (Firebase.apps.isNotEmpty) {
@@ -118,17 +104,6 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
             // Ошибка Firebase - работаем в режиме демо
             return const MainScreen();
           }
-
-          /*
-          final authState = ref.watch(authProvider);
-          return authState.when(
-            data: (user) => user != null ? const MainScreen() : const AuthScreen(),
-            loading: () => const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, stack) => const AuthScreen(),
-          );
-          */
         },
       ),
       routes: {
