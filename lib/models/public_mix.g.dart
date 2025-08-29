@@ -14,11 +14,7 @@ PublicMix _$PublicMixFromJson(Map<String, dynamic> json) => PublicMix(
       authorName: json['authorName'] as String? ?? '',
       createdAt: (json['createdAt'] as num?)?.toInt() ?? 0,
       likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
-      tobaccoIngredients: (json['tobaccoIngredients'] as List<dynamic>?)
-              ?.map(
-                  (e) => TobaccoIngredient.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
+      tobaccoIngredients: (json['tobaccoIngredients'] as List<dynamic>?)?.map((e) => TobaccoIngredient.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
       smokingTime: (json['smokingTime'] as num?)?.toInt() ?? 0,
       strength: json['strength'] as String? ?? 'Средний',
       tobaccoAmount: (json['tobaccoAmount'] as num?)?.toInt() ?? 0,

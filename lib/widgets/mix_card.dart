@@ -114,7 +114,7 @@ class MixCard extends StatelessWidget {
               // Лайки и действия
               Row(
                 children: [
-                  if (showLikes) ..[
+                  if (showLikes) ...[
                     Icon(
                       Icons.favorite,
                       color: AppTheme.accentPink,
