@@ -11,7 +11,15 @@ import 'utils/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  
+  try {
+    await Firebase.initializeApp();
+    print('Firebase инициализирован успешно');
+  } catch (e) {
+    print('Ошибка инициализации Firebase: $e');
+    // Продолжаем работу даже если Firebase не инициализирован
+  }
+  
   runApp(const ProviderScope(child: TasteSmokeApp()));
 }
 
@@ -50,8 +58,6 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-
     return MaterialApp(
       title: 'TasteSmoke',
       theme: AppTheme.darkTheme,
@@ -64,6 +70,46 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
             }
           });
 
+          // Временно отключаем authProvider для тестирования
+          return SafeArea(
+            child: Scaffold(
+              backgroundColor: AppTheme.darkBackground,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.smoke_free,
+                      size: 80,
+                      color: AppTheme.accentPink,
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'TasteSmoke',
+                      style: TextStyle(
+                        color: AppTheme.primaryText,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      'Приложение запущено!',
+                      style: TextStyle(
+                        color: AppTheme.secondaryText,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    TestButton(),
+                  ],
+                ),
+              ),
+            ),
+          );
+
+          /*
+          final authState = ref.watch(authProvider);
           return authState.when(
             data: (user) => user != null ? const MainScreen() : const AuthScreen(),
             loading: () => const Scaffold(
@@ -71,6 +117,7 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
             ),
             error: (error, stack) => const AuthScreen(),
           );
+          */
         },
       ),
       routes: AppRoutes.routes,
@@ -195,6 +242,29 @@ class FavoritesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(child: Text('Избранное', style: TextStyle(color: AppTheme.primaryText))),
+    );
+  }
+}
+
+class TestButton extends StatelessWidget {
+  const TestButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppTheme.accentPink,
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+      ),
+      child: const Text(
+        'Перейти к приложению',
+        style: TextStyle(color: Colors.white),
+      ),
     );
   }
 }
