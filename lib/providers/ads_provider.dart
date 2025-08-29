@@ -1,11 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../models/ad_banner.dart';
 import '../services/firestore_service.dart';
 
 /// Провайдер для рекламных баннеров на главной странице
 final bannersProvider = StreamProvider<List<AdBanner>>((ref) {
-  final firestoreService = ref.read(firestoreServiceProvider);
-  return firestoreService.getBanners(AdBanner.homeBannerPlacement);
+  try {
+    if (Firebase.apps.isEmpty) {
+      return Stream.value([]);
+    }
+    
+    final firestoreService = ref.read(firestoreServiceProvider);
+    return firestoreService.getBanners(AdBanner.homeBannerPlacement);
+  } catch (e) {
+    print('Error in bannersProvider: $e');
+    return Stream.value([]);
+  }
 });
 
 /// Провайдер для баннеров по размещению

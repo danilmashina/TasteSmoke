@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../models/public_mix.dart';
 import '../services/firestore_service.dart';
+import '../utils/mock_data.dart';
 
 /// Провайдер сервиса Firestore
 final firestoreServiceProvider = Provider<FirestoreService>((ref) {
@@ -9,22 +11,52 @@ final firestoreServiceProvider = Provider<FirestoreService>((ref) {
 
 /// Провайдер для популярных миксов
 final popularMixesProvider = StreamProvider<List<PublicMix>>((ref) {
-  final firestoreService = ref.read(firestoreServiceProvider);
-  return firestoreService.getPopularMixes();
+  try {
+    // Проверяем, инициализирован ли Firebase
+    if (Firebase.apps.isEmpty) {
+      // Используем мок-данные для тестирования
+      return Stream.value(MockDataProvider.getPopularMixes());
+    }
+    
+    final firestoreService = ref.read(firestoreServiceProvider);
+    return firestoreService.getPopularMixes();
+  } catch (e) {
+    print('Error in popularMixesProvider: $e');
+    // В случае ошибки возвращаем мок-данные
+    return Stream.value(MockDataProvider.getPopularMixes());
+  }
 });
 
 /// Провайдер для миксов по категории
 final mixesByCategoryProvider = StreamProvider.family<List<PublicMix>, String>((ref, category) {
-  final firestoreService = ref.read(firestoreServiceProvider);
-  return firestoreService.getMixesByCategory(category);
+  try {
+    if (Firebase.apps.isEmpty) {
+      return Stream.value([]);
+    }
+    
+    final firestoreService = ref.read(firestoreServiceProvider);
+    return firestoreService.getMixesByCategory(category);
+  } catch (e) {
+    print('Error in mixesByCategoryProvider: $e');
+    return Stream.value([]);
+  }
 });
 
 /// Провайдер для поиска миксов
 final searchResultsProvider = StreamProvider.family<List<PublicMix>, String>((ref, query) {
   if (query.isEmpty) return Stream.value([]);
   
-  final firestoreService = ref.read(firestoreServiceProvider);
-  return firestoreService.searchMixes(query);
+  try {
+    if (Firebase.apps.isEmpty) {
+      return Stream.value([]);
+    }
+    
+    final firestoreService = ref.read(firestoreServiceProvider);
+    return firestoreService.searchMixes(query);
+  } catch (e) {
+    print('Error in searchResultsProvider: $e');
+    return Stream.value([]);
+  }
 });
 
 /// Провайдер для избранных миксов пользователя
