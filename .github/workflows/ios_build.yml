@@ -1,4 +1,4 @@
-name: Build iOS App
+name: Build TasteSmoke iOS App
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build-ios:
@@ -31,8 +33,18 @@ jobs:
       run: flutter analyze --no-fatal-infos
       
     - name: Run tests
-      run: flutter test
+      run: flutter test --coverage
       
+    - name: Check iOS configuration
+      run: |
+        echo "Checking iOS configuration..."
+        ls -la ios/Runner/
+        if [ -f "ios/Runner/GoogleService-Info.plist" ]; then
+          echo "✅ Firebase iOS config found"
+        else
+          echo "⚠️ Firebase iOS config missing - будет работать в demo режиме"
+        fi
+        
     - name: Build iOS (unsigned)
       run: flutter build ios --no-codesign --release --no-tree-shake-icons
       
@@ -42,9 +54,44 @@ jobs:
         cp -r build/ios/iphoneos/Runner.app Payload/
         zip -r TasteSmoke-iOS.ipa Payload/
         
+    - name: Get version info
+      id: version
+      run: |
+        VERSION=$(grep 'version:' pubspec.yaml | sed 's/version: //g' | tr -d ' ')
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+        
     - name: Upload IPA artifact
       uses: actions/upload-artifact@v4
       with:
-        name: TasteSmoke-iOS
+        name: TasteSmoke-iOS-v${{ steps.version.outputs.version }}
         path: TasteSmoke-iOS.ipa
-        retention-days: 30
+        retention-days: 90
+        
+    - name: Upload to Release (if release)
+      if: github.event_name == 'release'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release upload ${{ github.event.release.tag_name }} TasteSmoke-iOS.ipa --clobber
+        
+    - name: Create deployment info
+      run: |
+        echo "## 📱 TasteSmoke iOS Build Completed" >> build-info.md
+        echo "" >> build-info.md
+        echo "**Version:** ${{ steps.version.outputs.version }}" >> build-info.md
+        echo "**Build Date:** $(date)" >> build-info.md
+        echo "**Branch:** ${{ github.ref_name }}" >> build-info.md
+        echo "**Commit:** ${{ github.sha }}" >> build-info.md
+        echo "" >> build-info.md
+        echo "### 📦 Installation Instructions:" >> build-info.md
+        echo "1. Download the IPA file from artifacts" >> build-info.md
+        echo "2. Install using AltStore or similar tool" >> build-info.md
+        echo "3. Trust developer certificate in iOS Settings" >> build-info.md
+        echo "4. Enable Developer Mode if needed (iOS 16+)" >> build-info.md
+        
+    - name: Upload build info
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-info
+        path: build-info.md

@@ -20,8 +20,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  PublicMix? _selectedMix;
-  AdBanner? _selectedBanner;
 
   @override
   void dispose() {
