@@ -8,23 +8,14 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-
+    // Временно работаем без аутентификации
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: const Text('Профиль'),
         backgroundColor: AppTheme.cardBackground,
       ),
-      body: authState.when(
-        data: (user) => user != null
-            ? _buildProfileContent(context, ref, user.displayName ?? 'Пользователь')
-            : const Center(child: Text('Не авторизован', style: TextStyle(color: AppTheme.primaryText))),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text('Ошибка: $error', style: const TextStyle(color: Colors.red)),
-        ),
-      ),
+      body: _buildProfileContent(context, ref, 'Тестовый Пользователь'),
     );
   }
 

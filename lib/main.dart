@@ -8,6 +8,7 @@ import 'providers/auth_provider.dart';
 import 'services/remote_config_service.dart';
 import 'utils/theme.dart';
 import 'utils/routes.dart';
+import 'models/public_mix.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,43 +71,53 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
             }
           });
 
-          // Временно отключаем authProvider для тестирования
-          return SafeArea(
-            child: Scaffold(
-              backgroundColor: AppTheme.darkBackground,
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.smoke_free,
-                      size: 80,
-                      color: AppTheme.accentPink,
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'TasteSmoke',
+      theme: AppTheme.darkTheme,
+      home: Builder(
+        builder: (context) {
+          // Показываем диалог обновления при необходимости
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_showUpdateDialog) {
+              _showUpdateDialogWidget(context);
+            }
+          });
+
+          // Проверяем инициализацию Firebase
+          try {
+            if (Firebase.apps.isNotEmpty) {
+              // Firebase инициализирован - используем полную функциональность
+              final authState = ref.watch(authProvider);
+              return authState.when(
+                data: (user) => user != null ? const MainScreen() : const AuthScreen(),
+                loading: () => const Scaffold(
+                  backgroundColor: AppTheme.darkBackground,
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: AppTheme.accentPink),
+                        SizedBox(height: 16),
+                        Text(
+                          'Загрузка...',
+                          style: TextStyle(color: AppTheme.primaryText),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 20),
-                    Text(
-                      'TasteSmoke',
-                      style: TextStyle(
-                        color: AppTheme.primaryText,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Приложение запущено!',
-                      style: TextStyle(
-                        color: AppTheme.secondaryText,
-                        fontSize: 16,
-                      ),
-                    ),
-                    SizedBox(height: 30),
-                    TestButton(),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
+                error: (error, stack) => const AuthScreen(),
+              );
+            } else {
+              // Firebase не инициализирован - работаем в режиме демо
+              return const MainScreen();
+            }
+          } catch (e) {
+            // Ошибка Firebase - работаем в режиме демо
+            return const MainScreen();
+          }
 
           /*
           final authState = ref.watch(authProvider);
@@ -120,7 +131,10 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
           */
         },
       ),
-      routes: AppRoutes.routes,
+      routes: {
+        '/main': (context) => const MainScreen(),
+        '/auth': (context) => const AuthScreen(),
+      },
     );
   }
 
@@ -223,50 +237,207 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 }
 
-// Заглушки для экранов (создадим отдельно)
+// Экран категорий с контентом
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Категории', style: TextStyle(color: AppTheme.primaryText))),
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      appBar: AppBar(
+        title: const Text('Категории'),
+        backgroundColor: AppTheme.cardBackground,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.2,
+          ),
+          itemCount: PublicMix.categories.length,
+          itemBuilder: (context, index) {
+            final category = PublicMix.categories[index];
+            return Container(
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackground,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.accentPink.withOpacity(0.3)),
+              ),
+              child: InkWell(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Выбрана категория: $category'),
+                      backgroundColor: AppTheme.cardBackground,
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _getCategoryIcon(category),
+                      size: 40,
+                      color: AppTheme.accentPink,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      category,
+                      style: const TextStyle(
+                        color: AppTheme.primaryText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Фрукты': return Icons.apple;
+      case 'Ягоды': return Icons.circle;
+      case 'Цитрусовые': return Icons.eco;
+      case 'Десерты': return Icons.cake;
+      case 'Напитки': return Icons.local_drink;
+      case 'Мятные': return Icons.spa;
+      case 'Пряные': return Icons.whatshot;
+      case 'Кислые': return Icons.sentiment_very_dissatisfied;
+      case 'Необычные': return Icons.star;
+      default: return Icons.category;
+    }
   }
 }
 
+// Экран избранного с контентом
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Избранное', style: TextStyle(color: AppTheme.primaryText))),
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      appBar: AppBar(
+        title: const Text('Избранное'),
+        backgroundColor: AppTheme.cardBackground,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Информация о разделе
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.accentPink.withOpacity(0.3)),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.favorite,
+                  size: 48,
+                  color: AppTheme.accentPink,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Избранные миксы',
+                  style: TextStyle(
+                    color: AppTheme.primaryText,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Здесь будут отображаться ваши любимые миксы',
+                  style: TextStyle(
+                    color: AppTheme.secondaryText,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Пример списка избранных
+          const Text(
+            'Популярные миксы для добавления:',
+            style: TextStyle(
+              color: AppTheme.primaryText,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Мок-список миксов
+          ...[
+            'Фруктовый Микс',
+            'Ягодный Взрыв',
+            'Цитрусовая Свежесть',
+          ].map((mixName) => Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackground,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.favorite_border,
+                  color: AppTheme.accentPink,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    mixName,
+                    style: const TextStyle(
+                      color: AppTheme.primaryText,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Добавлено в избранное: $mixName'),
+                        backgroundColor: AppTheme.cardBackground,
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.add,
+                    color: AppTheme.accentPink,
+                  ),
+                ),
+              ],
+            ),
+          )).toList(),
+        ],
+      ),
     );
   }
 }
 
-class TestButton extends StatelessWidget {
-  const TestButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.accentPink,
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-      ),
-      child: const Text(
-        'Перейти к приложению',
-        style: TextStyle(color: Colors.white),
-      ),
-    );
-  }
 }
 
 class ProfileScreen extends StatelessWidget {

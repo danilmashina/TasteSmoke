@@ -19,7 +19,11 @@ final popularMixesProvider = StreamProvider<List<PublicMix>>((ref) {
     }
     
     final firestoreService = ref.read(firestoreServiceProvider);
-    return firestoreService.getPopularMixes();
+    return firestoreService.getPopularMixes().handleError((error) {
+      print('Error in popularMixesProvider: $error');
+      // В случае ошибки возвращаем мок-данные
+      return MockDataProvider.getPopularMixes();
+    });
   } catch (e) {
     print('Error in popularMixesProvider: $e');
     // В случае ошибки возвращаем мок-данные

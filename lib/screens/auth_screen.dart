@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../providers/auth_provider.dart';
 import '../utils/theme.dart';
 
+/// Экран авторизации
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
@@ -12,16 +11,10 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+  bool _isLogin = true;
   bool _isLoading = false;
-  bool _isResetting = false;
-  bool _needsVerification = false;
-  bool _isTermsAccepted = false;
-  bool _isPrivacyAccepted = false;
-  String? _message;
 
   @override
   void dispose() {
@@ -31,490 +24,258 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    // Настраиваем русский язык для Firebase Auth (как в Android версии)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(authServiceProvider).setLanguageCode('ru');
-    });
-  }
-
-  bool get _isAgreementsAccepted => _isTermsAccepted && _isPrivacyAccepted;
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppTheme.paddingLarge),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppTheme.paddingLarge),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Заголовок
-                        Text(
-                          'TasteSmoke',
-                          style: AppTheme.h1.copyWith(
-                            color: AppTheme.accentPink,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.paddingSmall),
-                        Text(
-                          'Миксы для кальяна',
-                          style: AppTheme.body.copyWith(
-                            color: AppTheme.secondaryText,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.paddingLarge),
-
-                        // Email поле
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            hintText: 'Введите ваш email',
-                            prefixIcon: Icon(Icons.email_outlined),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Введите email';
-                            }
-                            if (!value.contains('@')) {
-                              return 'Введите корректный email';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: AppTheme.paddingMedium),
-
-                        // Поле пароля
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Пароль',
-                            hintText: 'Введите пароль',
-                            prefixIcon: Icon(Icons.lock_outline),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Введите пароль';
-                            }
-                            if (value.length < 6) {
-                              return 'Пароль должен содержать минимум 6 символов';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: AppTheme.paddingMedium),
-
-                        // Соглашения
-                        _buildAgreements(),
-                        const SizedBox(height: AppTheme.paddingLarge),
-
-                        // Кнопки входа и регистрации
-                        if (!_needsVerification) ...[
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: _isLoading || !_isAgreementsAccepted
-                                      ? null
-                                      : _signIn,
-                                  child: _isLoading
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Text('Войти'),
-                                ),
-                              ),
-                              const SizedBox(width: AppTheme.paddingMedium),
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: _isLoading || !_isAgreementsAccepted
-                                      ? null
-                                      : _register,
-                                  child: const Text(
-                                    'Регистрация',
-                                    style: TextStyle(color: AppTheme.accentPink),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppTheme.paddingMedium),
-
-                          // Кнопка сброса пароля
-                          TextButton(
-                            onPressed: _isLoading ? null : _resetPassword,
-                            child: Text(
-                              _isResetting
-                                  ? 'Отправляем...'
-                                  : 'Забыли пароль?',
-                              style: const TextStyle(color: AppTheme.accentPink),
-                            ),
-                          ),
-                        ],
-
-                        // Блок верификации email
-                        if (_needsVerification) ...[
-                          Container(
-                            padding: const EdgeInsets.all(AppTheme.paddingMedium),
-                            decoration: BoxDecoration(
-                              color: AppTheme.accentPink.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                              border: Border.all(
-                                color: AppTheme.accentPink.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                const Icon(
-                                  Icons.email_outlined,
-                                  size: 48,
-                                  color: AppTheme.accentPink,
-                                ),
-                                const SizedBox(height: AppTheme.paddingMedium),
-                                const Text(
-                                  'Подтвердите email',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.primaryText,
-                                  ),
-                                ),
-                                const SizedBox(height: AppTheme.paddingSmall),
-                                Text(
-                                  'Мы отправили письмо с подтверждением на ${_emailController.text}. Проверьте почту и нажмите на ссылку.',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: AppTheme.secondaryText),
-                                ),
-                                const SizedBox(height: AppTheme.paddingMedium),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton(
-                                        onPressed: _resendVerification,
-                                        child: const Text(
-                                          'Отправить повторно',
-                                          style: TextStyle(color: AppTheme.accentPink),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: AppTheme.paddingMedium),
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        onPressed: _checkVerification,
-                                        child: const Text('Получено'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-
-                        // Сообщение об ошибке/успехе
-                        if (_message != null) ...[
-                          const SizedBox(height: AppTheme.paddingMedium),
-                          Container(
-                            padding: const EdgeInsets.all(AppTheme.paddingMedium),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                              border: Border.all(
-                                color: Colors.red.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Text(
-                              _message!,
-                              style: const TextStyle(color: Colors.red),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ],
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Spacer(),
+              
+              // Логотип и название
+              Column(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentPink,
+                      borderRadius: BorderRadius.circular(20),
                     ),
+                    child: const Icon(
+                      Icons.smoke_free,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  const Text(
+                    'TasteSmoke',
+                    style: TextStyle(
+                      color: AppTheme.primaryText,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  const Text(
+                    'Создавайте и делитесь миксами для кальяна',
+                    style: TextStyle(
+                      color: AppTheme.secondaryText,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // Форма авторизации
+              Card(
+                color: AppTheme.cardBackground,
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Text(
+                        _isLogin ? 'Вход' : 'Регистрация',
+                        style: const TextStyle(
+                          color: AppTheme.primaryText,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Email поле
+                      TextField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          hintText: 'example@mail.com',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppTheme.secondaryText),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppTheme.accentPink),
+                          ),
+                          labelStyle: const TextStyle(color: AppTheme.secondaryText),
+                          hintStyle: const TextStyle(color: AppTheme.secondaryText),
+                        ),
+                        style: const TextStyle(color: AppTheme.primaryText),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Пароль поле
+                      TextField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Пароль',
+                          hintText: '••••••••',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppTheme.secondaryText),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppTheme.accentPink),
+                          ),
+                          labelStyle: const TextStyle(color: AppTheme.secondaryText),
+                          hintStyle: const TextStyle(color: AppTheme.secondaryText),
+                        ),
+                        style: const TextStyle(color: AppTheme.primaryText),
+                        obscureText: true,
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Кнопка входа/регистрации
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _authenticate,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accentPink,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  _isLogin ? 'Войти' : 'Зарегистрироваться',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Переключение между входом и регистрацией
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _isLogin = !_isLogin;
+                          });
+                        },
+                        child: Text(
+                          _isLogin
+                              ? 'Нет аккаунта? Зарегистрироваться'
+                              : 'Уже есть аккаунт? Войти',
+                          style: const TextStyle(
+                            color: AppTheme.accentPink,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
+              
+              const Spacer(),
+              
+              // Кнопка "Продолжить без регистрации"
+              TextButton(
+                onPressed: _continueAsGuest,
+                child: const Text(
+                  'Продолжить без регистрации',
+                  style: TextStyle(
+                    color: AppTheme.secondaryText,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildAgreements() {
-    return Column(
-      children: [
-        // Пользовательское соглашение
-        Row(
-          children: [
-            Checkbox(
-              value: _isTermsAccepted,
-              onChanged: (value) {
-                setState(() {
-                  _isTermsAccepted = value ?? false;
-                });
-              },
-              activeColor: AppTheme.accentPink,
-            ),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _showTermsDialog(),
-                child: RichText(
-                  text: const TextSpan(
-                    style: TextStyle(color: AppTheme.secondaryText),
-                    children: [
-                      TextSpan(text: 'Я согласен с '),
-                      TextSpan(
-                        text: 'пользовательским соглашением',
-                        style: TextStyle(
-                          color: AppTheme.accentPink,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+  Future<void> _authenticate() async {
+    if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Пожалуйста, заполните все поля'),
+          backgroundColor: Colors.red,
         ),
-        // Согласие на обработку данных
-        Row(
-          children: [
-            Checkbox(
-              value: _isPrivacyAccepted,
-              onChanged: (value) {
-                setState(() {
-                  _isPrivacyAccepted = value ?? false;
-                });
-              },
-              activeColor: AppTheme.accentPink,
-            ),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _showPrivacyDialog(),
-                child: RichText(
-                  text: const TextSpan(
-                    style: TextStyle(color: AppTheme.secondaryText),
-                    children: [
-                      TextSpan(text: 'Я согласен на '),
-                      TextSpan(
-                        text: 'обработку персональных данных',
-                        style: TextStyle(
-                          color: AppTheme.accentPink,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Future<void> _signIn() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-      _message = null;
-    });
-
-    final authService = ref.read(authServiceProvider);
-    final result = await authService.signInWithEmailAndPassword(
-      _emailController.text,
-      _passwordController.text,
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (result.isSuccess) {
-      // Навигация обрабатывается автоматически через authProvider
-    } else {
-      setState(() {
-        _message = result.error;
-      });
-    }
-  }
-
-  Future<void> _register() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-      _message = null;
-    });
-
-    final authService = ref.read(authServiceProvider);
-    final result = await authService.registerWithEmailAndPassword(
-      _emailController.text,
-      _passwordController.text,
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (result.isSuccess) {
-      setState(() {
-        _needsVerification = true;
-        _message = result.message;
-      });
-    } else {
-      setState(() {
-        _message = result.error;
-      });
-    }
-  }
-
-  Future<void> _resetPassword() async {
-    if (_emailController.text.isEmpty) {
-      setState(() {
-        _message = 'Введите email для сброса пароля';
-      });
+      );
       return;
     }
 
     setState(() {
-      _isResetting = true;
-      _message = null;
-    });
-
-    final authService = ref.read(authServiceProvider);
-    final result = await authService.resetPassword(_emailController.text);
-
-    setState(() {
-      _isResetting = false;
-      _message = result.isSuccess ? result.message : result.error;
-    });
-  }
-
-  Future<void> _resendVerification() async {
-    final authService = ref.read(authServiceProvider);
-    final result = await authService.resendVerificationEmail();
-
-    setState(() {
-      _message = result.isSuccess ? result.message : result.error;
-    });
-  }
-
-  Future<void> _checkVerification() async {
-    setState(() {
       _isLoading = true;
-      _message = null;
     });
 
-    // Пытаемся войти снова, чтобы проверить верификацию
-    final authService = ref.read(authServiceProvider);
-    final result = await authService.signInWithEmailAndPassword(
-      _emailController.text,
-      _passwordController.text,
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (result.isSuccess) {
-      // Успешно вошли - email подтвержден
-    } else {
-      setState(() {
-        _message = result.error;
-      });
+    try {
+      // Здесь будет реальная авторизация Firebase
+      await Future.delayed(const Duration(seconds: 2)); // Имитация загрузки
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isLogin ? 'Успешный вход!' : 'Регистрация завершена!'),
+            backgroundColor: AppTheme.accentPink,
+          ),
+        );
+        
+        // Переход к главному экрану будет автоматически через authProvider
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  void _showTermsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Пользовательское соглашение'),
-        content: const SingleChildScrollView(
-          child: Text(
-            'Используя приложение TasteSmoke, вы соглашаетесь с условиями использования и несете ответственность за публикуемый контент. Приложение предназначено для лиц старше 18 лет.',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Отмена',
-              style: TextStyle(color: AppTheme.accentPink),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _isTermsAccepted = true;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text(
-              'Принимаю',
-              style: TextStyle(color: AppTheme.accentPink),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPrivacyDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Обработка персональных данных'),
-        content: const SingleChildScrollView(
-          child: Text(
-            'Мы собираем и обрабатываем ваши данные (email, никнейм, фото профиля) для обеспечения работы приложения. Данные защищены и не передаются третьим лицам.',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Отмена',
-              style: TextStyle(color: AppTheme.accentPink),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _isPrivacyAccepted = true;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text(
-              'Принимаю',
-              style: TextStyle(color: AppTheme.accentPink),
-            ),
-          ),
-        ],
-      ),
-    );
+  void _continueAsGuest() {
+    // Переход к главному экрану как гость
+    Navigator.of(context).pushReplacementNamed('/main');
   }
 }

@@ -11,7 +11,10 @@ final bannersProvider = StreamProvider<List<AdBanner>>((ref) {
     }
     
     final firestoreService = ref.read(firestoreServiceProvider);
-    return firestoreService.getBanners(AdBanner.homeBannerPlacement);
+    return firestoreService.getBanners(AdBanner.homeBannerPlacement).handleError((error) {
+      print('Error in bannersProvider: $error');
+      return <AdBanner>[];
+    });
   } catch (e) {
     print('Error in bannersProvider: $e');
     return Stream.value([]);
