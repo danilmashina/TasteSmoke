@@ -11,7 +11,8 @@ import 'utils/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  // Временно отключаем Firebase для тестирования
+  // await Firebase.initializeApp();
   runApp(const ProviderScope(child: TasteSmokeApp()));
 }
 
@@ -50,7 +51,8 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
+    // Временно отключаем authProvider
+    // final authState = ref.watch(authProvider);
 
     return MaterialApp(
       title: 'TasteSmoke',
@@ -64,7 +66,10 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
             }
           });
 
-          // Определяем стартовый экран
+          // Определяем стартовый экран - временно без аутентификации
+          return const MainScreen(); // Прямо открываем главный экран
+
+          /*
           return authState.when(
             data: (user) => user != null ? const MainScreen() : const AuthScreen(),
             loading: () => const Scaffold(
@@ -72,6 +77,7 @@ class _TasteSmokeAppState extends ConsumerState<TasteSmokeApp> {
             ),
             error: (error, stack) => const AuthScreen(),
           );
+          */
         },
       ),
       routes: AppRoutes.routes,
